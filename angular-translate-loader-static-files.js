@@ -90,19 +90,27 @@ function $translateStaticFilesLoader($q, $http) {
       }));
     }
 
-    return $q.all(promises)
-      .then(function (data) {
-        var length = data.length,
-            mergedData = {};
+    var qAllResolver = $q.all;
+    if ($q.hasOwnProperty("allSettled")) {
+      qAllResolver = $q.allSettled;
+    }
 
-        for (var i = 0; i < length; i++) {
-          for (var key in data[i]) {
-            mergedData[key] = data[i][key];
+    return qAllResolver(promises)
+      .then(function(values) {
+        var mergedData = {};
+        for (var i = 0; i < values.length; i += 1) {
+          var data = values[i];
+          if (data.hasOwnProperty("state")) {
+            if (data.state == 'fulfilled') {
+              data = data.value;
+            }
+          };
+          for (var key in data) {
+            mergedData[key] = data[key];
           }
         }
-
         return mergedData;
-      });
+    });
   };
 }
 
