@@ -101,6 +101,8 @@ function $translateStaticFilesLoader($q, $http) {
               mergedData[key] = data[key];
             }
             defer.resolve(mergedData);
+          }, function() {
+            defer.resolve(mergedData);
           });
           return defer.promise;
         });
