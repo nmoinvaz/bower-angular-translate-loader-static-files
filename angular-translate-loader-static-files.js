@@ -90,28 +90,23 @@ function $translateStaticFilesLoader($q, $http) {
       }));
     }
 
-    var qAllResolver = $q.all;
-    if ($q.hasOwnProperty("allSettled")) {
-      qAllResolver = $q.allSettled;
-    }
-
-    return qAllResolver(promises)
-      .then(function(values) {
-        var mergedData = {};
-        for (var i = 0; i < values.length; i += 1) {
-          var data = values[i];
-          if (data.hasOwnProperty("state")) {
-            if (data.state == 'fulfilled') {
-              data = data.value;
+    var chain = $q.when();
+    var mergedData = {};
+    for (var i = 0; i < promises.length; i++) {
+      (function(promise) {
+        chain = chain.then(function() {
+          var defer = $q.defer();
+          promise.then(function(data) {
+            for (var key in data) {
+              mergedData[key] = data[key];
             }
-          };
-          for (var key in data) {
-            mergedData[key] = data[key];
-          }
-        }
-        return mergedData;
-    });
-  };
+            defer.resolve(mergedData);
+          });
+          return defer.promise;
+        });
+      })(promises[i]);
+    };
+    return chain;
 }
 
 $translateStaticFilesLoader.displayName = '$translateStaticFilesLoader';
