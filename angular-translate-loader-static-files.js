@@ -75,7 +75,7 @@ function $translateStaticFilesLoader($q, $http) {
         .then(function(result) {
           return result.data;
         }, function () {
-          return $q.reject(options.key);
+          return {};
         });
     };
 
