@@ -108,6 +108,7 @@ function $translateStaticFilesLoader($q, $http) {
         }
     });
     return defer.promise;
+  };
 }
 
 $translateStaticFilesLoader.displayName = '$translateStaticFilesLoader';
