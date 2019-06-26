@@ -79,36 +79,35 @@ function $translateStaticFilesLoader($q, $http) {
         });
     };
 
-    var promises = [],
-        length = options.files.length;
-
-    for (var i = 0; i < length; i++) {
-      promises.push(load({
-        prefix: options.files[i].prefix,
-        key: options.key,
-        suffix: options.files[i].suffix
-      }));
-    }
-
-    var chain = $q.when();
     var mergedData = {};
-    for (var i = 0; i < promises.length; i++) {
-      (function(promise) {
-        chain = chain.then(function() {
-          var defer = $q.defer();
-          promise.then(function(data) {
-            for (var key in data) {
-              mergedData[key] = data[key];
-            }
-            defer.resolve(mergedData);
-          }, function() {
-            defer.resolve(mergedData);
-          });
-          return defer.promise;
-        });
-      })(promises[i]);
+    var mergeLang = function(data) {
+      for (var key in data) {
+        mergedData[key] = data[key];
+      }
+      return mergedData;
     };
-    return chain;
+
+    var defer = $q.defer();
+    options.files.reduce(function(chain, current) {
+      return chain.then(function() {
+        var deferLoad = $q.defer();
+        load({
+          prefix: current.prefix,
+          key: options.key,
+          suffix: current.suffix
+        }).then(function(data) {
+          deferLoad.resolve(mergeLang(data));
+        });
+        return deferLoad.promise;
+      });
+    }, $q.when()).then(function() {
+        if (Object.keys(mergedData).length == 0) {
+          defer.reject();
+        } else {
+          defer.resolve(mergedData);
+        }
+    });
+    return defer.promise;
 }
 
 $translateStaticFilesLoader.displayName = '$translateStaticFilesLoader';
